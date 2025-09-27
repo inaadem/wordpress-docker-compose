@@ -1,249 +1,494 @@
-# WordPress Docker Compose# WordPress Docker Compose
+# WordPress Docker Compose# WordPress Docker Compose# WordPress Docker Compose
 
 
 
-A production-ready WordPress deployment using Docker Compose with Nginx, MySQL, and automatic SSL certificates.A production-ready WordPress deployment using Docker Compose with Nginx, MySQL, and automatic SSL certificates.
+A complete WordPress installation using Docker Compose with a LEMP stack (Linux, Nginx, MySQL, and PHP). This setup includes automatic SSL certificate generation and renewal with Let's Encrypt.
 
 
 
-## Features## Features
+## OverviewA production-ready WordPress deployment using Docker Compose with Nginx, MySQL, and automatic SSL certificates.A production-ready WordPress deployment using Docker Compose with Nginx, MySQL, and automatic SSL certificates.
 
 
 
-- **WordPress 5.1.1** with PHP-FPM- **WordPress 5.1.1** with PHP-FMP
+WordPress is a popular Content Management System (CMS) that typically requires a LAMP or LEMP stack installation. By using Docker and Docker Compose, we can streamline this process by using pre-configured images and containers that work together seamlessly.
 
-- **MySQL 8.0** database  - **MySQL 8.0** database
+
+
+This setup uses standardized Docker images for consistent deployments and includes SSL/TLS encryption for production security.## Features## Features
+
+
+
+## Stack Components
+
+
+
+- **WordPress 5.1.1-fpm-alpine** - Content Management System with PHP-FPM processor- **WordPress 5.1.1** with PHP-FPM- **WordPress 5.1.1** with PHP-FMP
+
+- **MySQL 8.0** - Database server with native password authentication  
+
+- **Nginx 1.15.12-alpine** - Web server and reverse proxy- **MySQL 8.0** database  - **MySQL 8.0** database
+
+- **Certbot** - Automated SSL certificate management via Let's Encrypt
 
 - **Nginx** web server with SSL support- **Nginx** web server with SSL support
 
+## Architecture
+
 - **Let's Encrypt** automatic SSL certificates- **Let's Encrypt** automatic SSL certificates
+
+The application uses Docker's bridge networking to enable communication between containers while only exposing necessary ports to the host system.
 
 - **Docker Compose** orchestration- **Docker Compose** orchestration
 
-- Production-ready configuration- Production-ready configuration
+```
+
+┌─────────────────────────────────────────────┐- Production-ready configuration- Production-ready configuration
+
+│                   Server                    │
+
+├─────────────────────────────────────────────┤
+
+│  ┌─────────────┐  ┌─────────────┐  ┌───────┐ │
+
+│  │   Nginx     │  │ WordPress   │  │ MySQL │ │## Architecture## Architecture
+
+│  │   :80/443   │  │   :9000     │  │ :3306 │ │
+
+│  └─────┬───────┘  └─────┬───────┘  └───┬───┘ │
+
+│        │                │              │     │
+
+│        └────────────────┼──────────────┘     │``````
+
+│                         │                    │
+
+│  ┌─────────────────────────────────────────┐ │┌─────────────────────────────────────────────┐┌─────────────────────────────────────────────┐
+
+│  │         Let's Encrypt (Certbot)        │ │
+
+│  └─────────────────────────────────────────┘ ││                   Server                    ││                   Server                    │
+
+└─────────────────────────────────────────────┘
+
+```├─────────────────────────────────────────────┤├─────────────────────────────────────────────┤
 
 
 
-## Architecture## Architecture
+## Project Structure│  ┌─────────────┐  ┌─────────────┐  ┌───────┐ ││  ┌─────────────┐  ┌─────────────┐  ┌───────┐ │
 
 
 
-``````
+```│  │   Nginx     │  │ WordPress   │  │ MySQL │ ││  │   Nginx     │  │ WordPress   │  │ MySQL │ │
 
-┌─────────────────────────────────────────────┐┌─────────────────────────────────────────────┐
+wordpress-docker-compose/
 
-│                   Server                    ││                   Server                    │
+├── docker-compose.yml     # Service definitions and container orchestration│  │ (Webserver) │  │   (PHP)     │  │  (DB) │ ││  │ (Webserver) │  │   (PHP)     │  │  (DB) │ │
 
-├─────────────────────────────────────────────┤├─────────────────────────────────────────────┤
+├── .env                  # Environment variables (not tracked in git)
 
-│  ┌─────────────┐  ┌─────────────┐  ┌───────┐ ││  ┌─────────────┐  ┌─────────────┐  ┌───────┐ │
+├── nginx-conf/│  │  Port 80    │  │ Port 9000   │  │ 3306  │ ││  │  Port 80    │  │ Port 9000   │  │ 3306  │ │
 
-│  │   Nginx     │  │ WordPress   │  │ MySQL │ ││  │   Nginx     │  │ WordPress   │  │ MySQL │ │
+│   └── default.conf     # Nginx server configuration
 
-│  │ (Webserver) │  │   (PHP)     │  │  (DB) │ ││  │ (Webserver) │  │   (PHP)     │  │  (DB) │ │
+├── .gitignore           # Git ignore patterns│  │  Port 443   │  │             │  │       │ ││  │  Port 443   │  │             │  │       │ │
 
-│  │  Port 80    │  │ Port 9000   │  │ 3306  │ ││  │  Port 80    │  │ Port 9000   │  │ 3306  │ │
+├── .dockerignore        # Docker ignore patterns
 
-│  │  Port 443   │  │             │  │       │ ││  │  Port 443   │  │             │  │       │ │
+└── README.md            # This documentation│  └─────────────┘  └─────────────┘  └───────┘ ││  └─────────────┘  └─────────────┘  └───────┘ │
 
-│  └─────────────┘  └─────────────┘  └───────┘ ││  └─────────────┘  └─────────────┘  └───────┘ │
+```
 
 │  ┌─────────────────────────────────────────┐ ││  ┌─────────────────────────────────────────┐ │
 
+## Prerequisites
+
 │  │         Let's Encrypt (Certbot)        │ ││  │         Let's Encrypt (Certbot)        │ │
 
-│  └─────────────────────────────────────────┘ ││  └─────────────────────────────────────────┘ │
+- Docker and Docker Compose installed on your server
+
+- A registered domain name pointing to your server's IP address│  └─────────────────────────────────────────┘ ││  └─────────────────────────────────────────┘ │
+
+- Basic familiarity with command line operations
 
 └─────────────────────────────────────────────┘└─────────────────────────────────────────────┘
 
-``````
-
-
-
-## Project Structure## Project Structure
-
-
+## Installation
 
 ``````
-
-wordpress-docker-compose/wordpress-docker-compose/
-
-├── docker-compose.yml     # Main orchestration file├── docker-compose.yml     # Main orchestration file
-
-├── .env                  # Environment variables (not tracked)├── .env                  # Environment variables (not tracked)
-
-├── nginx-conf/├── nginx-conf/
-
-│   └── default.conf     # Nginx configuration│   └── default.conf     # Nginx configuration
-
-├── .gitignore           # Git ignore rules├── .gitignore           # Git ignore rules
-
-├── .dockerignore        # Docker ignore rules├── .dockerignore        # Docker ignore rules
-
-└── README.md            # This file└── README.md            # This file
-
-``````
-
-
-
-## Quick Start## Quick Start
-
-
-
-### Prerequisites### Prerequisites
-
-- Docker and Docker Compose installed
-
-- Docker and Docker Compose installed- Domain name (optional for local testing)
-
-- Domain name (optional for local testing)
 
 ### 1. Clone Repository
 
-### 1. Clone Repository```bash
+
+
+```bash
+
+git clone https://github.com/inaadem/wordpress-docker-compose.git## Project Structure## Project Structure
+
+cd wordpress-docker-compose
+
+```
+
+
+
+### 2. Configure Environment Variables``````
+
+
+
+Create a `.env` file with your database credentials:wordpress-docker-compose/wordpress-docker-compose/
+
+
+
+```bash├── docker-compose.yml     # Main orchestration file├── docker-compose.yml     # Main orchestration file
+
+MYSQL_ROOT_PASSWORD=secure_root_password
+
+MYSQL_USER=wordpress_user├── .env                  # Environment variables (not tracked)├── .env                  # Environment variables (not tracked)
+
+MYSQL_PASSWORD=secure_user_password
+
+```├── nginx-conf/├── nginx-conf/
+
+
+
+**Security Note:** Use strong, unique passwords for production deployments.│   └── default.conf     # Nginx configuration│   └── default.conf     # Nginx configuration
+
+
+
+### 3. Update Domain Configuration├── .gitignore           # Git ignore rules├── .gitignore           # Git ignore rules
+
+
+
+Edit the following files to replace placeholder domains with your actual domain:├── .dockerignore        # Docker ignore rules├── .dockerignore        # Docker ignore rules
+
+
+
+**docker-compose.yml:**└── README.md            # This file└── README.md            # This file
+
+- Replace `your-email@domain.com` with your email address
+
+- Replace `yourdomain.com` with your domain``````
+
+
+
+**nginx-conf/default.conf:**
+
+- Replace `yourdomain.com` with your domain in server_name directive
+
+## Quick Start## Quick Start
+
+### 4. Initial SSL Certificate (Staging)
+
+
+
+For first-time setup, the configuration uses Let's Encrypt's staging environment to avoid rate limits:
+
+### Prerequisites### Prerequisites
+
+```bash
+
+docker-compose up -d- Docker and Docker Compose installed
+
+```
+
+- Docker and Docker Compose installed- Domain name (optional for local testing)
+
+### 5. Verify Certificate Generation
+
+- Domain name (optional for local testing)
+
+Check that staging certificates were created successfully:
+
+### 1. Clone Repository
+
+```bash
+
+docker-compose exec webserver ls -la /etc/letsencrypt/live### 1. Clone Repository```bash
+
+```
 
 git clone https://github.com/inaadem/wordpress-docker-compose.git
 
+### 6. Switch to Production Certificates
+
 ```bashcd wordpress-docker-compose
 
-git clone https://github.com/inaadem/wordpress-docker-compose.git```
+Once staging certificates work, update docker-compose.yml:
+
+- Remove `--staging` flag from certbot commandgit clone https://github.com/inaadem/wordpress-docker-compose.git```
+
+- Add `--force-renewal` flag
 
 cd wordpress-docker-compose
+
+Then recreate the certbot container:
 
 ```### 2. Configure Environment
 
 ```bash
 
-### 2. Configure Environment# Create environment file
-
-cp .env.example .env
-
-Create a `.env` file with your database credentials:
-
-# Edit .env with your database credentials
-
-```bashMYSQL_ROOT_PASSWORD=your_strong_password
-
-MYSQL_ROOT_PASSWORD=your_strong_passwordMYSQL_USER=wpuser
-
-MYSQL_USER=wpuserMYSQL_PASSWORD=your_wp_password
-
-MYSQL_PASSWORD=your_wp_password```
+docker-compose up --force-recreate --no-deps certbot```bash
 
 ```
 
+### 2. Configure Environment# Create environment file
+
+## Access Your Site
+
+cp .env.example .env
+
+- **HTTP:** `http://yourdomain.com` (redirects to HTTPS)
+
+- **HTTPS:** `https://yourdomain.com`Create a `.env` file with your database credentials:
+
+- **WordPress Admin:** `https://yourdomain.com/wp-admin`
+
+# Edit .env with your database credentials
+
+## Configuration Details
+
+```bashMYSQL_ROOT_PASSWORD=your_strong_password
+
+### Environment Variables
+
+MYSQL_ROOT_PASSWORD=your_strong_passwordMYSQL_USER=wpuser
+
+| Variable | Purpose | Example |
+
+|----------|---------|---------|MYSQL_USER=wpuserMYSQL_PASSWORD=your_wp_password
+
+| `MYSQL_ROOT_PASSWORD` | MySQL root account password | `secure_root_pass_123` |
+
+| `MYSQL_USER` | WordPress database username | `wp_user` |MYSQL_PASSWORD=your_wp_password```
+
+| `MYSQL_PASSWORD` | WordPress database password | `secure_wp_pass_123` |
+
+```
+
+### Container Communication
+
 ### 3. Update Domain Configuration
 
-### 3. Update Domain ConfigurationEdit `docker-compose.yml` and `nginx-conf/default.conf`:
+- **Database:** WordPress connects to MySQL via internal Docker network on port 3306
+
+- **Web Server:** Nginx proxies PHP requests to WordPress container on port 9000### 3. Update Domain ConfigurationEdit `docker-compose.yml` and `nginx-conf/default.conf`:
+
+- **SSL Certificates:** Shared volume between Nginx and Certbot containers
 
 - Replace `yourdomain.com` with your actual domain
 
+### Security Features
+
 Edit `docker-compose.yml` and `nginx-conf/default.conf`:- Replace `your-email@domain.com` with your email
 
+- **SSL/TLS Encryption:** Automatic HTTPS with Let's Encrypt certificates
 
+- **Security Headers:** X-Frame-Options, X-XSS-Protection, Content Security Policy
 
-- Replace `yourdomain.com` with your actual domain### 4. Start Services
+- **MySQL Authentication:** Uses native password plugin for compatibility
 
-- Replace `your-email@domain.com` with your email```bash
-
-# Start all containers
-
-### 4. Start Servicesdocker-compose up -d
+- **Network Isolation:** Containers communicate via private Docker network- Replace `yourdomain.com` with your actual domain### 4. Start Services
 
 
 
-```bash# Check status
+## Management Commands- Replace `your-email@domain.com` with your email```bash
 
-# Start all containersdocker-compose ps
+
+
+### Container Operations# Start all containers
+
+
+
+```bash### 4. Start Servicesdocker-compose up -d
+
+# Start all services
 
 docker-compose up -d
 
-# View logs
+
+
+# Stop all services  ```bash# Check status
+
+docker-compose down
+
+# Start all containersdocker-compose ps
+
+# View container status
+
+docker-compose psdocker-compose up -d
+
+
+
+# View logs# View logs
+
+docker-compose logs
 
 # Check statusdocker-compose logs
 
-docker-compose ps```
+# Update images and restart
+
+docker-compose pull && docker-compose up -d --force-recreatedocker-compose ps```
+
+```
 
 
+
+### Database Management
 
 # View logs### 5. Access WordPress
 
-docker-compose logs- **Local:** http://localhost
+```bash
+
+# Create database backupdocker-compose logs- **Local:** http://localhost
+
+docker-compose exec db mysqldump -u root -p${MYSQL_ROOT_PASSWORD} wordpress > backup.sql
 
 ```- **Production:** https://yourdomain.com
 
+# Restore from backup
 
+docker-compose exec -T db mysql -u root -p${MYSQL_ROOT_PASSWORD} wordpress < backup.sql
+
+```
 
 ### 5. Access WordPress## 📸 Screenshots & Explanations
 
+### SSL Certificate Management
 
 
-- **Local:** <http://localhost>### 1. Container Status
-
-- **Production:** <https://yourdomain.com>**ADD SCREENSHOT HERE: `docker-compose ps` output**
 
 ```bash
 
-## ConfigurationNAME        IMAGE                        COMMAND                  SERVICE     STATUS          PORTS
+# Test certificate renewal (dry run)- **Local:** <http://localhost>### 1. Container Status
 
-db          mysql:8.0                    "docker-entrypoint.s…"   db          Up 2 hours      3306/tcp, 33060/tcp
+docker-compose run --rm certbot renew --dry-run
 
-### Environment Variables (.env)webserver   nginx:1.15.12-alpine         "nginx -g 'daemon of…"   webserver   Up 56 seconds   0.0.0.0:80->80/tcp, [::]:80->80/tcp
+- **Production:** <https://yourdomain.com>**ADD SCREENSHOT HERE: `docker-compose ps` output**
 
-wordpress   wordpress:5.1.1-fpm-alpine   "docker-entrypoint.s…"   wordpress   Up 2 hours      9000/tcp
+# Force certificate renewal
 
-```bash```
+docker-compose run --rm certbot renew --force-renewal```bash
 
-MYSQL_ROOT_PASSWORD=strongrootpassword123**Explanation:** Shows all three containers running successfully - database, webserver, and WordPress application.
 
-MYSQL_USER=wpuser
 
-MYSQL_PASSWORD=wppassword123### 2. WordPress Installation Screen
+# Check certificate expiration## ConfigurationNAME        IMAGE                        COMMAND                  SERVICE     STATUS          PORTS
 
-```**ADD SCREENSHOT HERE: Initial WordPress setup page**
+docker-compose exec webserver openssl x509 -noout -dates -in /etc/letsencrypt/live/yourdomain.com/cert.pem
 
-- Language selection
+```db          mysql:8.0                    "docker-entrypoint.s…"   db          Up 2 hours      3306/tcp, 33060/tcp
 
-### SSL Certificate Setup- Database configuration confirmation
 
-- Site information setup
 
-For production deployment:
+## Automatic Certificate Renewal### Environment Variables (.env)webserver   nginx:1.15.12-alpine         "nginx -g 'daemon of…"   webserver   Up 56 seconds   0.0.0.0:80->80/tcp, [::]:80->80/tcp
+
+
+
+To set up automatic certificate renewal, create a cron job:wordpress   wordpress:5.1.1-fpm-alpine   "docker-entrypoint.s…"   wordpress   Up 2 hours      9000/tcp
+
+
+
+```bash```bash```
+
+# Edit crontab
+
+crontab -eMYSQL_ROOT_PASSWORD=strongrootpassword123**Explanation:** Shows all three containers running successfully - database, webserver, and WordPress application.
+
+
+
+# Add this line to renew certificates daily at 2 AMMYSQL_USER=wpuser
+
+0 2 * * * cd /path/to/wordpress-docker-compose && docker-compose run --rm certbot renew && docker-compose exec webserver nginx -s reload
+
+```MYSQL_PASSWORD=wppassword123### 2. WordPress Installation Screen
+
+
+
+## Troubleshooting```**ADD SCREENSHOT HERE: Initial WordPress setup page**
+
+
+
+### Container Issues- Language selection
+
+
+
+```bash### SSL Certificate Setup- Database configuration confirmation
+
+# Check container logs
+
+docker-compose logs [service_name]- Site information setup
+
+
+
+# Restart specific serviceFor production deployment:
+
+docker-compose restart [service_name]
 
 **Explanation:** First-time access shows WordPress installation wizard where you configure site title, admin user, and basic settings.
 
-1. **Staging (Testing):**
+# Rebuild containers
+
+docker-compose up -d --build --force-recreate1. **Staging (Testing):**
+
+```
 
    - Use `--staging` flag in docker-compose.yml### 3. WordPress Dashboard
 
+### Database Connection Issues
+
    - Test certificate generation**ADD SCREENSHOT HERE: WordPress admin dashboard**
+
+Verify environment variables are properly set and containers can communicate:
 
 **Explanation:** Complete WordPress admin interface showing:
 
-2. **Production:**- Dashboard overview
+```bash
 
-   - Remove `--staging` flag- Posts and Pages management
+# Test database connection from WordPress container2. **Production:**- Dashboard overview
 
-   - Run `docker-compose down && docker-compose up -d`- Plugin and Theme sections
+docker-compose exec wordpress ping db
 
-- Settings and customization options
+```   - Remove `--staging` flag- Posts and Pages management
 
-## Common Issues
 
-### 4. Live Website
+
+### SSL Certificate Issues   - Run `docker-compose down && docker-compose up -d`- Plugin and Theme sections
+
+
+
+For Let's Encrypt rate limiting or validation errors:- Settings and customization options
+
+
+
+1. Use staging environment first (`--staging` flag)## Common Issues
+
+2. Verify DNS records point to your server
+
+3. Ensure ports 80 and 443 are accessible### 4. Live Website
+
+4. Check domain ownership
 
 ### MySQL Authentication Error**ADD SCREENSHOT HERE: Frontend "Hello World" post**
 
+## Production Recommendations
+
 **Explanation:** Default WordPress site with "Hello World" post, demonstrating:
 
-**Problem:** MySQL connection authentication method error- Proper theme loading
+- **Backup Strategy:** Regular automated backups of database and WordPress files
 
-- Database connectivity
+- **Updates:** Keep Docker images updated for security patches  **Problem:** MySQL connection authentication method error- Proper theme loading
+
+- **Monitoring:** Implement log monitoring and alerting
+
+- **Firewall:** Configure UFW or iptables to restrict access- Database connectivity
+
+- **Performance:** Consider implementing Redis cache and CDN
 
 **Solution:** Add to MySQL command in docker-compose.yml:- PHP processing working correctly
 
+## License
 
 
+
+MIT License - see LICENSE file for details.
 ```yaml### 5. SSL Certificate Status
 
 command: '--default-authentication-plugin=mysql_native_password'**ADD SCREENSHOT HERE: Browser showing HTTPS lock icon**
