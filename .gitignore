@@ -1,0 +1,11 @@
+.env
+
+# Deployment documentation (internal use only)
+deploy.md
+deployment-guide.md
+
+# Optional: Exclude screenshots and images if they're for documentation only
+*.png
+*.jpg
+*.jpeg
+*.gif
